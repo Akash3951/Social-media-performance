@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Analyzer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #1e90ff, #d3d3d3);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-container {
+            width: 90%;
+            max-width: 768px;
+            height: 500px;
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            border: 0px solid transparent;
+            background-clip: padding-box;
+            box-shadow: 0 4px 15px rgba(0, 0, 255, 0.3), 0 4px 20px rgba(128, 0, 128, 0.3);
+            border-image: linear-gradient(to right, gray, lightgray);
+            border-image-slice: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .prompt-boxes {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .prompt-box {
+            flex: 1;
+            width: 150px; /* Fixed width */
+            height: 100px; /* Fixed height */
+            background: #434343;
+            color: white;
+            border-radius: 8px; /* Removed circular shape */
+            padding: 10px;
+            text-align: center;
+            font-size: 15px; /* Increased font size */
+            font-family: Calibri, sans-serif; /* Changed font to Calibri */
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 255, 0.7); /* Blue drop shadow */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align content to the top */
+        }
+
+        .prompt-heading {
+            font-size: 14px;
+            font-weight: bold;
+            color: #f0f0f0;
+            margin-bottom: 8px;
+            align-self: flex-start; /* Align heading to the left */
+        }
+
+        .chat-box {
+            text-align: center;
+            flex-grow: 1;
+            overflow-y: auto; /* Allows scrolling when the content exceeds the container height */
+            padding-bottom: 20px; /* Adds padding for better spacing */
+        }
+
+        .chat-box h2 {
+            text-align: left;
+            padding-bottom: 20px;
+            font-size: 24px;
+            color: #333333;
+        }
+
+        .conversation {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .you-message, .bot-message {
+            max-width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 10px;
+            font-size: 16px;
+            word-wrap: break-word; /* Ensures text breaks within the container */
+        }
+
+        .you-message {
+            background: #e0e0e0;
+            align-self: flex-end;
+            text-align: right;
+            box-shadow: 0 4px 10px rgba(0, 0, 255, 0.2), 0 4px 15px rgba(128, 0, 128, 0.2);
+        }
+
+        .bot-message {
+            background: #d3f9d8;
+            align-self: flex-start;
+            box-shadow: 0 4px 10px rgba(0, 0, 255, 0.2), 0 4px 15px rgba(128, 0, 128, 0.2);
+        }
+
+        #input-box {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        #input-box input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1.5px solid #ccc;
+            border-radius: 15px;
+            font-size: 16px;
+        }
+
+        #input-box button {
+            padding: 10px 20px;
+            background: linear-gradient(to right, #3a8e3b, #a3d9a3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #input-box button:hover {
+            background: linear-gradient(to right, #2f6e2f, #81c781);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="chat-box">
+            <h2>Social-Media-Analyzer</h2>
+            <div class="prompt-boxes">
+                <div class="prompt-box" onclick="selectPrompt('Tell me the average like, share and comment values for each post type')">
+                    <div class="prompt-heading">Prompt 1</div>
+                    What is the highest number of likes?
+                </div>
+                <div class="prompt-box" onclick="selectPrompt('which post type has the highest engagement?')">
+                    <div class="prompt-heading">Prompt 2</div>
+                    Best day/time for posting?
+                </div>
+                <div class="prompt-box" onclick="selectPrompt('How do I increase the engagement on post?')">
+                    <div class="prompt-heading">Prompt 3</div>
+                    Compare views of recent posts
+                </div>
+            </div>
+            <div class="conversation" id="conversation">
+                <div class="you-message" id="you-message"></div>
+                <div class="bot-message" id="bot-message"></div>
+            </div>
+        </div>
+        <form id="input-box">
+            <input type="text" id="user-input" placeholder="Type your question here...">
+            <button id="ask-button">Ask</button>
+        </form>
+
+    </div>
+
+    <script>
+
+        document.getElementById('input-box').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const questionInput = document.getElementById('user-input');
+                    const question = questionInput.value;
+                    const chatHistory = document.getElementById('conversation');
+                    
+                    // Add user message
+                    chatHistory.innerHTML += `
+                        <div class="you-message" id="you-message">
+                            <strong>You:</strong> ${question}
+                        </div>
+                    `;
+            
+                    try {
+                        // Send request to backend
+                        const response = await fetch('/ask', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ question: question })
+                        });
+            
+                        const data = await response.json();
+                        
+                        // Add bot response
+                        const botResponse = data.message || "No response available.";
+                        chatHistory.innerHTML += `
+                            <div class="bot-message" id="bot-message">
+                                <strong>Bot:</strong> ${botResponse}
+                            </div>
+                        `;
+                    } catch (error) {
+                        chatHistory.innerHTML += `
+                            <div class="message bot-message" style="color: red;">
+                                <strong>Error:</strong> Unable to fetch the response. Please try again later.
+                            </div>
+                        `;
+                    }
+            
+                    // Clear input and scroll to bottom
+                    questionInput.value = '';
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                });
+        
+
+        function selectPrompt(promptText) {
+            document.getElementById("user-input").value = promptText;
+        }
+
+
+
+
+        // document.getElementById("ask-button").addEventListener("click", function() {
+        //     var userInput = document.getElementById("user-input").value;
+        //     updateConversation(userInput);
+        // });
+
+        // function selectPrompt(promptText) {
+        //     document.getElementById("user-input").value = promptText;
+        // }
+
+        // function updateConversation(userInput) {
+        //     var conversation = document.getElementById("conversation");
+
+        //     // Get the user and bot message containers
+        //     var userMessage = document.getElementById("you-message");
+        //     var botMessage = document.getElementById("bot-message");
+
+        //     // Check if the user input is not empty
+        //     if (userInput.trim() !== "") {
+        //         // Update the 'You' message without favicon
+        //         userMessage.innerHTML = "<strong>You</strong>: " + userInput;
+
+        //         // Simulate bot response without favicon
+        //         botMessage.innerHTML = "<strong>Bot</strong>: Your query is being processed...";
+
+        //         // Simulate a delay for the bot's response
+        //         setTimeout(function() {
+        //             botMessage.innerHTML = "<strong>Bot</strong>: Here is a response based on your query. This text could be long and the container will automatically adjust accordingly.";
+        //         }, 2000);
+        //     }
+        // }
+    </script>
+</body>
+</html>
